@@ -29,6 +29,13 @@ func defaultConfig() Config {
 		Server: ServerConfig{
 			Port: 8080,
 		},
+		DB: DBConfig{
+			Host:     "localhost",
+			Port:     5432,
+			User:     "postgres",
+			Password: "postgres",
+			Name:     "postgres",
+		},
 	}
 }
 

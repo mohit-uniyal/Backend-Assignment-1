@@ -5,6 +5,7 @@ import (
 	"event-booking/src/internal/config"
 	"event-booking/src/internal/input/handlers"
 	"event-booking/src/internal/input/routes"
+	"event-booking/src/migrations"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +17,16 @@ import (
 
 func main() {
 
+	// Load Configs
 	cfg, err := config.LoadConfig(".secrets/config.yaml")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Load Migrations
+	err = migrations.RunMigrations(fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
+		cfg.DB.User, cfg.DB.Password, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name,
+	))
 	if err != nil {
 		log.Fatal(err)
 	}
