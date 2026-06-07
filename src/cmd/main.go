@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	"event-booking/src/internal/adapter/postgres"
+	eventsrepo "event-booking/src/internal/adapter/postgres/events_repo.go"
 	"event-booking/src/internal/config"
 	"event-booking/src/internal/input/handlers"
 	"event-booking/src/internal/input/routes"
+	eventsusecase "event-booking/src/internal/usecase/events"
 	"event-booking/src/migrations"
 	"fmt"
 	"log"
@@ -24,14 +27,25 @@ func main() {
 	}
 
 	// Load Migrations
-	err = migrations.RunMigrations(fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
-		cfg.DB.User, cfg.DB.Password, cfg.DB.Host, cfg.DB.Port, cfg.DB.Name,
-	))
+	err = migrations.RunMigrations(postgres.GetConnectionString(cfg))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	eventHandler := handlers.NewEventHandler()
+	// Intialize Databases
+	db, err := postgres.NewPostgres(postgres.GetConnectionString(cfg))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initialize Repo Functions
+	eventsRepo := eventsrepo.NewEventsRepo(db)
+
+	// Initialize Usecase Functions
+	eventsUsecase := eventsusecase.NewEventsUsecase(eventsRepo)
+
+	// Initialize Handler Functions
+	eventHandler := handlers.NewEventHandler(eventsUsecase)
 
 	router := routes.NewRouter(eventHandler)
 

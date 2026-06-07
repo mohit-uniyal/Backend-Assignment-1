@@ -11,7 +11,12 @@ func NewRouter(
 ) *chi.Mux {
 	apiRouter := chi.NewRouter()
 
-	apiRouter.Get("/", handlers.HealthCheck)
+	apiRouter.Get("/", eventHandler.HealthCheck)
+
+	//Events Routes
+	eventsRouter := apiRouter
+	eventsRouter.Post("/", eventHandler.CreateEventHandler)
+	eventsRouter.Mount("/events", apiRouter)
 
 	// Add prefix
 	apiRouter.Mount("/api", apiRouter)
