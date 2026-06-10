@@ -1,4 +1,4 @@
-package eventsusecase
+package eventservice
 
 import (
 	"context"

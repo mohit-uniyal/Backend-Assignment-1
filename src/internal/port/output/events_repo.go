@@ -7,4 +7,5 @@ import (
 
 type EventsRepo interface {
 	CreateEvent(ctx context.Context, event *model.Event) (int, error)
+	FetchAllFutureEvents(ctx context.Context) ([]*model.Event, error)
 }

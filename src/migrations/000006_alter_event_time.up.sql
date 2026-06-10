@@ -1,0 +1,3 @@
+ALTER TABLE events 
+  ALTER COLUMN "time" TYPE TIMESTAMPTZ 
+  USING (CURRENT_DATE + "time") AT TIME ZONE 'Asia/Kolkata';

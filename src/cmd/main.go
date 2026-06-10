@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"event-booking/src/internal/adapter/postgres"
-	eventsrepo "event-booking/src/internal/adapter/postgres/events_repo.go"
+	eventsrepo "event-booking/src/internal/adapter/postgres/eventsrepo"
+	"event-booking/src/internal/adapter/redis"
+	"event-booking/src/internal/adapter/redis/redisrepo"
 	"event-booking/src/internal/config"
 	"event-booking/src/internal/input/handlers"
 	"event-booking/src/internal/input/routes"
-	eventsusecase "event-booking/src/internal/usecase/events"
+	cacheservice "event-booking/src/internal/usecase/cache"
+	eventservice "event-booking/src/internal/usecase/events"
 	"event-booking/src/migrations"
 	"fmt"
 	"log"
@@ -37,12 +40,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	redisClient, err := redis.NewRedisClient(cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialize Repo Functions
+	cacheRepo := redisrepo.NewRedisRepo(redisClient)
 	eventsRepo := eventsrepo.NewEventsRepo(db)
 
 	// Initialize Usecase Functions
-	eventsUsecase := eventsusecase.NewEventsUsecase(eventsRepo)
+	cacheUsecase := cacheservice.NewCacheService(cacheRepo, eventsRepo)
+	if err := cacheUsecase.PopulateEvents(context.Background()); err != nil {
+		log.Printf("failed to populate events: %v", err)
+	}
+	eventsUsecase := eventservice.NewEventsUsecase(eventsRepo)
 
 	// Initialize Handler Functions
 	eventHandler := handlers.NewEventHandler(eventsUsecase)

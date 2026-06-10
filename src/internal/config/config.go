@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Server ServerConfig `yaml:"server"`
 	DB     DBConfig     `yaml:"database"`
+	Redis  RedisConfig  `yaml:"redis"`
 }
 
 type ServerConfig struct {
@@ -24,6 +25,13 @@ type DBConfig struct {
 	Name     string `yaml:"name"`
 }
 
+type RedisConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Password string `yaml:"password"`
+	Db       int    `yaml:"db"`
+}
+
 func defaultConfig() Config {
 	return Config{
 		Server: ServerConfig{
@@ -35,6 +43,12 @@ func defaultConfig() Config {
 			User:     "postgres",
 			Password: "postgres",
 			Name:     "postgres",
+		},
+		Redis: RedisConfig{
+			Host:     "localhost",
+			Port:     6379,
+			Password: "",
+			Db:       0,
 		},
 	}
 }
@@ -70,6 +84,42 @@ func overrideWithEnv(cfg *Config) {
 	cfg.Server.Port = getEnvInt(
 		"APP_PORT",
 		cfg.Server.Port,
+	)
+	cfg.DB.Host = getEnv(
+		"DB_HOST",
+		cfg.DB.Host,
+	)
+	cfg.DB.Port = getEnvInt(
+		"DB_PORT",
+		cfg.DB.Port,
+	)
+	cfg.DB.Name = getEnv(
+		"DB_NAME",
+		cfg.DB.Name,
+	)
+	cfg.DB.User = getEnv(
+		"DB_USER",
+		cfg.DB.User,
+	)
+	cfg.DB.Password = getEnv(
+		"DB_PASSWORD",
+		cfg.DB.Password,
+	)
+	cfg.Redis.Host = getEnv(
+		"REDIS_HOST",
+		cfg.Redis.Host,
+	)
+	cfg.Redis.Port = getEnvInt(
+		"REDIS_PORT",
+		cfg.Redis.Port,
+	)
+	cfg.Redis.Password = getEnv(
+		"REDIS_PASSWORD",
+		cfg.Redis.Password,
+	)
+	cfg.Redis.Db = getEnvInt(
+		"REDIS_DB",
+		cfg.Redis.Db,
 	)
 }
 
