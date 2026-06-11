@@ -2,8 +2,10 @@ package cacheservice
 
 import (
 	"context"
+	"event-booking/src/internal/core/model"
 	inputport "event-booking/src/internal/port/input"
 	outputport "event-booking/src/internal/port/output"
+	"fmt"
 	"log"
 	"time"
 )
@@ -40,6 +42,26 @@ func (c *CacheUsecaseImpl) PopulateEvents(ctx context.Context) error {
 			log.Printf("failed to set event in cache, %v", err)
 		}
 
+	}
+
+	return nil
+}
+
+func (c *CacheUsecaseImpl) SetEvent(ctx context.Context, event *model.Event) error {
+	if event == nil {
+		log.Printf("event is nil")
+		return fmt.Errorf("event is nil in SetEvent")
+	}
+	eventKey := getEventTicketsKey(event)
+	if eventKey == "" {
+		log.Printf("failed to form a key for the event: %d", event.EventId)
+		return fmt.Errorf("failed to form a key for the event: %d", event.EventId)
+	}
+
+	err := c.cacheRepo.SetInt(ctx, eventKey, event.TotalTickets-event.TicketsSold, time.Until(event.EventTime))
+	if err != nil {
+		log.Printf("failed to set event in cache, %v", err)
+		return err
 	}
 
 	return nil

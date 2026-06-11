@@ -54,7 +54,7 @@ func main() {
 	if err := cacheUsecase.PopulateEvents(context.Background()); err != nil {
 		log.Printf("failed to populate events: %v", err)
 	}
-	eventsUsecase := eventservice.NewEventsUsecase(eventsRepo)
+	eventsUsecase := eventservice.NewEventsUsecase(eventsRepo, cacheUsecase)
 
 	// Initialize Handler Functions
 	eventHandler := handlers.NewEventHandler(eventsUsecase)

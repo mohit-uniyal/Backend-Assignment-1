@@ -13,17 +13,23 @@ import (
 )
 
 type EventsUsecaseImpl struct {
-	eventsRepo outputport.EventsRepo
+	eventsRepo   outputport.EventsRepo
+	cacheService inputport.CacheUsecase
 }
 
-func NewEventsUsecase(eventsRepo outputport.EventsRepo) inputport.EventsUsecase {
+func NewEventsUsecase(eventsRepo outputport.EventsRepo, cacheService inputport.CacheUsecase) inputport.EventsUsecase {
 	return &EventsUsecaseImpl{
-		eventsRepo: eventsRepo,
+		eventsRepo:   eventsRepo,
+		cacheService: cacheService,
 	}
 }
 
 func (e *EventsUsecaseImpl) CreateEvent(ctx context.Context, event *dto.Event) (*dto.Event, error) {
 	// Validate the event
+	if event == nil {
+		log.Printf("event is nil in CreateEvent")
+		return nil, fmt.Errorf("event is nil in CreateEvent")
+	}
 	if event.EventName == "" {
 		return nil, fmt.Errorf("event name cannot be empty")
 	}
@@ -49,6 +55,18 @@ func (e *EventsUsecaseImpl) CreateEvent(ctx context.Context, event *dto.Event) (
 	if err != nil {
 		log.Printf("failed to create an event, %v", err)
 		return nil, err
+	}
+
+	//push the event to cache
+	err = e.cacheService.SetEvent(ctx, &model.Event{
+		EventId:      eventId,
+		EventName:    event.EventName,
+		EventTime:    eventTime,
+		TicketsSold:  event.TicketsSold,
+		TotalTickets: event.TotalTickets,
+	})
+	if err != nil {
+		log.Printf("failed to set event in cache: %v", err)
 	}
 
 	event.EventId = eventId
